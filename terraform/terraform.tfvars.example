@@ -1,0 +1,7 @@
+cloudflare_api_token = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+cloudflare_zone_id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+client_ip_address = ["xx.xx.xx.xx/32", "xx.xx.xx.xx/32"] // curl api.ipify.org
+allow_ingress_ports = ["22"]
+path_to_private_key = "~/.ssh/id_rsa"
+aws_key_name = "your_keyname"
+

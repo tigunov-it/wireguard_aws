@@ -1,0 +1,19 @@
+---
+- name: Wireguard
+  hosts: all
+  become: true
+  vars_prompt:
+    - name: peers_count
+      prompt: How mach wireguard clients are you want?
+      private: false
+      default: '1'
+    - name: dns_name
+      prompt: Please, write your wireguard server address.
+      private: false
+    - name: local_folder_path
+      prompt: Please write path on local computer for save wireguard config files
+      private: false
+      default: ~/Downloads/config_wireguard
+  roles:
+    - name: wireguard
+      tags: wireguard

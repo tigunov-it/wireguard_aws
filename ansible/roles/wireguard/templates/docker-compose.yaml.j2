@@ -1,0 +1,29 @@
+---
+version: "2.1"
+services:
+    wireguard:
+        image: lscr.io/linuxserver/wireguard:latest
+        container_name: wireguard
+        cap_add:
+            - NET_ADMIN
+            - SYS_MODULE
+        environment:
+            - PUID=1000
+            - PGID=1000
+            - TZ=Europe/London
+            - SERVERURL={{ dns }}
+            - SERVERPORT=51820
+            - PEERS={{ peers }}
+            - PEERDNS=208.67.222.222, 208.67.220.220
+            - INTERNAL_SUBNET=10.13.13.0
+            - ALLOWEDIPS=0.0.0.0/0
+            - PERSISTENTKEEPALIVE_PEERS= #optional
+            - LOG_CONFS=true #optional
+        volumes:
+            - ./config:/config
+            - ./lib/modules:/lib/modules #optional
+        ports:
+            - 51820:51820/udp
+        sysctls:
+            - net.ipv4.conf.all.src_valid_mark=1
+        restart: unless-stopped

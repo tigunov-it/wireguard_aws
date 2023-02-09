@@ -1,0 +1,102 @@
+---
+# tasks file for wireguard
+
+- name: Print a message
+  ansible.builtin.debug:
+    msg:
+      - 'Create {{ peers_count }} wireguard clients'
+      - 'Wireguard server: {{ dns_name }}'
+      - 'Configs archive will be saved in {{ local_folder_path }}'
+
+############## Install Docker
+- name: Install ansible.builtin.aptitude
+  ansible.builtin.apt:
+    name: aptitude
+    state: present
+    update_cache: true
+
+- name: Install required system packages
+  ansible.builtin.apt:
+    pkg:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - python3-pip
+      - virtualenv
+      - python3-setuptools
+    state: present
+    update_cache: true
+
+- name: Add Docker apt Key
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker Repository
+  ansible.builtin.apt_repository:
+    repo: deb https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable
+    state: present
+
+- name: Update apt and install docker-ce
+  ansible.builtin.apt:
+    name: docker-ce
+    state: present
+    update_cache: true
+
+- name: Install Docker Module for Python
+  ansible.builtin.pip:
+    name: docker
+
+- name: Ensure group "docker" exists with correct gid
+  ansible.builtin.group:
+    name: docker
+    state: present
+    gid: 1750
+
+- name: Install docker-compose
+  ansible.builtin.apt:
+    name: docker-compose
+    state: present
+    update_cache: true
+
+############### Install wireguard
+
+- name: Create directory
+  ansible.builtin.file:
+    path: ~/wireguard
+    state: directory
+    mode: '0644'
+
+- name: Get infos on container
+  community.docker.docker_container_info:
+    name: wireguard
+  register: result
+
+- name: Copy docker-compose file
+  ansible.builtin.template:
+    dest: ~/wireguard/docker-compose.yaml
+    src: docker-compose.yaml.j2
+    mode: '0644'
+  vars:
+    dns: '{{ dns_name }}'
+    peers: '{{ peers_count }}'
+  when: not result.exists
+
+- name: Run the service defined in my_project's docker-compose.yml
+  community.docker.docker_compose:
+    project_src: ~/wireguard/
+  when: not result.exists
+
+############### Fetch configs
+- name: Archive wg configs
+  community.general.archive:
+    path: ~/wireguard/config
+    dest: ~/wireguard/config.zip
+    format: zip
+    mode: '0644'
+
+- name: Store wg config archive files to local mashine
+  ansible.builtin.fetch:
+    src: ~/wireguard/config.zip
+    dest: '{{ local_folder_path }}'
